@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Check for arguements, if none print usage and quit.
+if [ $# != 2 ]; then
+    echo "usage: nodups dir1 dir2"
+    echo "dir1 and dir2 are directories with files in them."
+    echo "all files in dir2 which already exist in dir1 are removed."
+    exit
+fi
+
+# Check if first arg is directory, if not quit.
+if [ ! -d $1 ]; then
+    echo "$1 is not a directory."
+    exit
+fi
+
+# Check if second arg is directory, if not quit.
+if [ ! -d $2 ]; then
+    echo "$2 is not a directory."
+    exit
+fi
+
+# Check for same directory twice, if true quit.
+if [ $1 = $2 ]; then
+    echo "Same directory specified twice. Disaster results."
+    exit
+fi
+
+# Main process, for all files in first dir, check if in second dir
+# If same, delete. If same name but different content, warn.
+# If file does not exist in dir 2, warn.
+dir1=${1##*/}
+dir2=${2##*/}
+for i in $(ls $1); do
+    if [ -f $2/$i ]; then
+        cmp $1/$i $2/$i &> /dev/null
+        cmpexit=$?
+        if [ $cmpexit -eq 0 ]; then
+            echo "$dir1/$i : $dir2/$i matches - removing from $dir2"
+        elif [ $cmpexit -eq 1 ]; then
+            echo "$dir1/$i : $dir2/$i exists but contents differ"
+        fi
+    else
+        echo "$dir1/$i : no $i in $dir2"
+    fi
+done
